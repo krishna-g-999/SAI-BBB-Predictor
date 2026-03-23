@@ -4,6 +4,7 @@ torch==2.2.2
 torch-scatter
 torch-sparse
 torch-geometric==2.5.2
+rdkit
 huggingface_hub>=0.22.0
 numpy>=1.24.0
 scipy>=1.11.0
@@ -11,3 +12,4 @@ scikit-learn>=1.4.0
 plotly>=5.20.0
 pillow>=10.0.0
 pandas>=2.0.0
+requests>=2.31.0
