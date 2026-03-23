@@ -76,7 +76,7 @@ st.markdown('''
 <div class="sainet-header">
   <div class="ll">{ll}</div><div class="divider"></div>
   <div class="title-block">
-    <h1>SAI <span>BBB</span> Predictor</h1>
+    <h1><span style='color:white'>SAI</span><span style='color:#F0A500'> BBB</span> Predictor</h1>
     <div class="subtitle">CNS Drug Transport Prediction &nbsp;|&nbsp; A SAI-Net Translational Module</div>
     <div class="chip-row">
       <span class="chip">BBB Penetration</span><span class="chip">PGP Efflux</span>
@@ -111,7 +111,7 @@ def pubchem_lookup(name):
     except Exception as e:
         return None
 
-@st.cache_resource(show_spinner='Loading SAI-Net v3 ensemble...')
+@st.cache_resource(show_spinner='Loading SAI BBB ensemble...')
 def load_models():
     import torch
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -148,30 +148,47 @@ def predict(smiles, models):
     import torch, numpy as np
     from torch_geometric.data import Data
     from rdkit import Chem
-    from sainet_model import atom_feat, bond_feat
+    import sainet_model as sm
     ALL  = ['BBB','logBB','PGP','BCRP','MRP1','PAMPA','Caco2','LogP','PPBR','CYP3A4','CYP2C19','CYP1A2']
     CLS  = {'BBB','PGP','BCRP','MRP1','CYP3A4','CYP2C19','CYP1A2'}
     SHOW = ['BBB','PGP','BCRP','MRP1','logBB','PAMPA','Caco2']
-    mol = Chem.MolFromSmiles(smiles)
-    if mol is None: return None
-    x = torch.tensor([atom_feat(a) for a in mol.GetAtoms()], dtype=torch.float)
-    src, dst, ea = [], [], []
-    for b in mol.GetBonds():
-        i, j = b.GetBeginAtomIdx(), b.GetEndAtomIdx()
-        bf = bond_feat(b)
-        src += [i,j]; dst += [j,i]; ea += [bf,bf]
-    if not src: return None
-    data = Data(x=x, edge_index=torch.tensor([src,dst], dtype=torch.long),
-                edge_attr=torch.tensor(ea, dtype=torch.float))
-    data.batch = torch.zeros(x.shape[0], dtype=torch.long)
-    preds = []
-    with torch.no_grad():
-        for m in models:
-            out = m(data).cpu().numpy().flatten()
-            preds.append([1/(1+np.exp(-float(out[i]))) if t in CLS else float(out[i])
-                          for i,t in enumerate(ALL) if i < len(out)])
-    mn = np.mean(preds, axis=0); sd = np.std(preds, axis=0)
-    return {t: {'mean': round(float(mn[ALL.index(t)]),4), 'std': round(float(sd[ALL.index(t)]),4)} for t in SHOW}
+    # Detect atom_feat / bond_feat function names dynamically
+    af = getattr(sm, 'atom_feat', None) or getattr(sm, 'get_atom_features', None) or getattr(sm, 'atom_features', None)
+    bf = getattr(sm, 'bond_feat', None) or getattr(sm, 'get_bond_features', None) or getattr(sm, 'bond_features', None)
+    if af is None or bf is None:
+        st.session_state['predict_err'] = 'atom_feat/bond_feat not found in sainet_model. Available: ' + str([x for x in dir(sm) if not x.startswith('_')])
+        return None
+    try:
+        mol = Chem.MolFromSmiles(smiles)
+        if mol is None:
+            st.session_state['predict_err'] = 'RDKit could not parse SMILES'
+            return None
+        x = torch.tensor([af(a) for a in mol.GetAtoms()], dtype=torch.float)
+        src, dst, ea = [], [], []
+        for b in mol.GetBonds():
+            i, j = b.GetBeginAtomIdx(), b.GetEndAtomIdx()
+            bfeat = bf(b)
+            src += [i,j]; dst += [j,i]; ea += [bfeat,bfeat]
+        if not src:
+            st.session_state['predict_err'] = 'No bonds found in molecule'
+            return None
+        data = Data(x=x, edge_index=torch.tensor([src,dst], dtype=torch.long),
+                    edge_attr=torch.tensor(ea, dtype=torch.float))
+        data.batch = torch.zeros(x.shape[0], dtype=torch.long)
+        preds = []
+        with torch.no_grad():
+            for m in models:
+                out = m(data).cpu().numpy().flatten()
+                preds.append([1/(1+np.exp(-float(out[i]))) if t in CLS else float(out[i])
+                              for i,t in enumerate(ALL) if i < len(out)])
+        if not preds:
+            st.session_state['predict_err'] = 'No predictions from ensemble'
+            return None
+        mn = np.mean(preds, axis=0); sd = np.std(preds, axis=0)
+        return {t: {'mean': round(float(mn[ALL.index(t)]),4), 'std': round(float(sd[ALL.index(t)]),4)} for t in SHOW}
+    except Exception as e:
+        st.session_state['predict_err'] = str(e)
+        return None
 
 def mol_img(smi):
     try:
@@ -199,7 +216,7 @@ tab1, tab2 = st.tabs(['Compound Search', 'About SAI-Net'])
 
 with tab1:
     st.markdown('<div class="sec-h">Search a Compound</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sec-s">Enter any drug name or approved compound. The tool retrieves the structure from PubChem and predicts all 7 CNS transport endpoints using SAI-Net v3.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sec-s">Enter any drug name or approved compound. The tool retrieves the structure from PubChem and predicts all 7 CNS transport endpoints using SAI BBB.</div>', unsafe_allow_html=True)
     c1, c2 = st.columns([5,1])
     name = c1.text_input('n', placeholder='Type any compound - e.g. donepezil, edaravone, memantine, curcumin...', label_visibility='collapsed')
     run  = c2.button('View Report')
@@ -305,7 +322,7 @@ with tab2:
         </div>''', unsafe_allow_html=True)
     st.markdown('''<div class="about-card">
       <div style="font-size:1.05rem;font-weight:700;color:#0D2137;margin-bottom:.8rem">SAI-Net Connection</div>
-      <p style="color:#334155;font-size:.89rem;line-height:1.7">SAI BBB Predictor is a <b>translational web module</b> derived from <b>SAI-Net v3</b> - a multitask graph attention network predicting seven CNS transport endpoints simultaneously.</p>
+      <p style="color:#334155;font-size:.89rem;line-height:1.7">SAI BBB Predictor is a <b>translational web module</b> built on <b>SAI BBB</b> - a multitask graph attention network predicting seven CNS transport endpoints simultaneously.</p>
       <div style="background:#EEF4FF;border-radius:8px;padding:.8rem 1rem;margin-top:.6rem;border-left:3px solid #1A3A5C">
         <b style="color:#1A3A5C;font-size:.85rem">Target Publication:</b>
         <span style="color:#334155;font-size:.85rem"> Nucleic Acids Research - Web Server Issue 2026</span>
