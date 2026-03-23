@@ -1,12 +1,1 @@
-\
-torch
-torch-geometric
-rdkit
-huggingface_hub
-numpy
-scipy
-scikit-learn
-plotly==5.18.0
-pillow
-pandas
-requests
+torch\ntorch-geometric\nrdkit\nhuggingface_hub\nnumpy\nscipy\nscikit-learn\nplotly==5.18.0\npillow\npandas\nrequests\n
