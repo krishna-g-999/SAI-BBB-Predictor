@@ -96,15 +96,30 @@ st.markdown("""
 
 @st.cache_data(show_spinner=False)
 def pubchem_lookup(name):
+    import urllib.parse, urllib.request, json as _json, ssl
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    encoded = urllib.parse.quote(name.strip())
+    url = (
+        "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/"
+        + encoded
+        + "/property/IsomericSMILES,IUPACName,MolecularWeight,MolecularFormula/JSON"
+    )
     try:
-        url = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{}/property/IsomericSMILES,IUPACName,MolecularWeight,MolecularFormula/JSON".format(req.utils.quote(name))
-        r = req.get(url, timeout=8)
-        if r.status_code != 200: return None
-        p = r.json()["PropertyTable"]["Properties"][0]
-        return {"smiles": p.get("IsomericSMILES",""), "iupac": p.get("IUPACName",""),
-                "mw": p.get("MolecularWeight",""), "formula": p.get("MolecularFormula",""),
-                "cid": p.get("CID","")}
-    except: return None
+        with urllib.request.urlopen(url, timeout=12, context=ctx) as resp:
+            data = _json.loads(resp.read().decode())
+        p = data["PropertyTable"]["Properties"][0]
+        return {
+            "smiles":   p.get("IsomericSMILES", ""),
+            "iupac":    p.get("IUPACName", ""),
+            "mw":       p.get("MolecularWeight", ""),
+            "formula":  p.get("MolecularFormula", ""),
+            "cid":      p.get("CID", ""),
+        }
+    except Exception as e:
+        st.session_state["pubchem_err"] = str(e)
+        return None
 
 @st.cache_resource(show_spinner="Loading SAI-Net v3 ensemble...")
 def load_models():
@@ -195,8 +210,7 @@ tab1, tab2 = st.tabs(["Compound Search", "About SAI-Net"])
 with tab1:
     st.markdown('<div class="sec-h">Search a Compound</div>', unsafe_allow_html=True)
     st.markdown('<div class="sec-s">Enter any drug name or approved compound. The tool retrieves the structure from PubChem and predicts all 7 CNS transport endpoints using SAI-Net v3.</div>', unsafe_allow_html=True)
-    st.markdown('<div class="search-card">', unsafe_allow_html=True)
-    c1, c2 = st.columns([5,1])
+        c1, c2 = st.columns([5,1])
     name = c1.text_input("n", placeholder="Type any compound — e.g. donepezil, edaravone, memantine, curcumin...", label_visibility="collapsed")
     run  = c2.button("View Report")
     st.markdown("""
@@ -215,7 +229,8 @@ with tab1:
         with st.spinner("Looking up {} on PubChem...".format(name)):
             cmpd = pubchem_lookup(name.strip())
         if cmpd is None:
-            st.error("**{}** not found on PubChem. Try the generic or IUPAC name.".format(name)); st.stop()
+            err_detail = st.session_state.get("pubchem_err", "")
+        st.error("**{}** not found on PubChem. Try the generic or IUPAC name. {}".format(name, err_detail)); st.stop()
 
         st.markdown("""
         <div style="background:linear-gradient(135deg,#0D1F35,#1A3A5C);border-radius:10px;
