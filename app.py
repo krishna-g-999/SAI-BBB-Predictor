@@ -385,32 +385,50 @@ with tab1:
         st.warning("Please enter a SMILES string or compound name.")
 
 with tab2:
-    # SAI-Net connection banner
+    # ── Header: logo left, title right  (mirrors BrainSafe AI template) ──────
+    col_logo, col_title = st.columns([1, 3])
+    with col_logo:
+        if SAI_SRC:
+            st.markdown('<div style="padding:1.2rem 1rem"><img src="{}" style="width:180px;height:180px;border-radius:12px;box-shadow:0 4px 18px rgba(4,14,28,.18)"></div>'.format(SAI_SRC), unsafe_allow_html=True)
+    with col_title:
+        st.markdown("""
+        <div style="padding:1.4rem 0 .8rem">
+          <div style="font-size:1.7rem;font-weight:800;color:#0D2137;margin-bottom:.5rem">
+            About <span style="color:white;background:#0D2137;padding:0 .3rem;border-radius:3px">SAI</span><span style="color:#F0A500"> BBB</span> Predictor
+          </div>
+          <div style="border-left:3px solid #F0A500;padding-left:.75rem;margin-bottom:.5rem">
+            <div style="color:#F0A500;font-size:.80rem;font-weight:800;text-transform:uppercase;letter-spacing:2px">Science for Society</div>
+            <div style="color:#5A7299;font-size:.90rem;margin-top:.2rem">Bridging CNS drug discovery with open computational science.</div>
+          </div>
+        </div>""", unsafe_allow_html=True)
+
+    # ── SAI-Net Connection ────────────────────────────────────────────────────
     st.markdown("""<div class="about-card">
-      <div class="sainet-badge">&#9670; SAI-Net Framework Module</div>
-      <div style="font-size:1.55rem;font-weight:800;color:#0D2137;margin-bottom:.4rem">
-        <span style="background:#0D2137;color:white;padding:0 .3rem;border-radius:3px">SAI</span>
-        <span style="color:#F0A500"> BBB</span>
-        <span style="color:#0D2137;font-weight:500"> Predictor</span>
-      </div>
-      <div style="background:#F0A500;height:3px;width:60px;border-radius:2px;margin-bottom:1rem"></div>
+      <div style="font-size:1.15rem;font-weight:700;color:#0D2137;margin-bottom:.8rem">SAI-Net Connection</div>
       <p style="color:#334155;font-size:.91rem;line-height:1.8;margin-bottom:.6rem">
-        SAI BBB Predictor is a translational web module of the
-        <b style="color:#0D2137">SAI-Net (Structure-Activity Intelligence Network)</b> framework —
-        a computational neuropharmacology platform for multiomics-integrated drug discovery
-        across neurodegenerative disease spectra including ALS, Alzheimer&apos;s, Parkinson&apos;s,
-        and Huntington&apos;s disease.
+        SAI BBB Predictor is a <b>translational web module</b> derived from the
+        <b>SAI-Net (Structure-Activity Intelligence Network)</b> &mdash; a computational
+        neuropharmacology framework for multiomics drug discovery in neurodegenerative diseases.
+      </p>
+      <p style="color:#334155;font-size:.91rem;line-height:1.8;margin-bottom:.6rem">
+        SAI-Net integrates structure-activity relationships, network pharmacology, proteomics,
+        transcriptomics, and metabolomics to identify candidate therapeutic compounds and
+        mechanisms across ALS, Alzheimer&apos;s, Parkinson&apos;s, and Huntington&apos;s disease spectra.
       </p>
       <p style="color:#334155;font-size:.91rem;line-height:1.8">
-        This module specifically addresses the <b>blood-brain barrier bottleneck</b> in CNS drug development —
-        one of the highest attrition points in neurotherapeutic pipelines — by providing simultaneous
-        prediction of 7 transport endpoints using a multitask graph attention network ensemble.
+        <b>This module</b> specifically addresses the blood-brain barrier bottleneck in CNS drug
+        development &mdash; providing simultaneous prediction of 7 transport endpoints using a
+        multitask graph attention network ensemble, with per-prediction uncertainty quantification.
       </p>
+      <div style="background:#EEF4FF;border-radius:8px;padding:.8rem 1.1rem;margin-top:.8rem;border-left:3px solid #1A3A5C">
+        <b style="color:#1A3A5C;font-size:.84rem">Future Integration:</b>
+        <span style="color:#334155;font-size:.84rem"> SAI-Net analytical APIs for real-time multiomics predictions, protein docking, and network pharmacology will be incorporated in subsequent versions of this platform.</span>
+      </div>
     </div>""", unsafe_allow_html=True)
 
-    # Innovation / NAR fit
+    # ── Why SAI BBB — endpoint table ─────────────────────────────────────────
     st.markdown("""<div class="about-card">
-      <div style="font-size:1.05rem;font-weight:700;color:#0D2137;margin-bottom:1rem">Why SAI BBB? Innovation &amp; Design</div>
+      <div style="font-size:1.15rem;font-weight:700;color:#0D2137;margin-bottom:1rem">Why SAI BBB? Innovation &amp; Design</div>
       <table class="endpoint-table">
         <tr><th>Endpoint</th><th>Type</th><th>Clinical Relevance</th><th>Threshold</th></tr>
         <tr><td><b>BBB Penetration</b></td><td>Classification</td><td>Primary CNS exposure predictor</td><td>P &ge; 0.50</td></tr>
@@ -419,46 +437,45 @@ with tab2:
         <tr><td><b>MRP1 Efflux</b></td><td>Classification</td><td>Active efflux at choroid plexus</td><td>P &lt; 0.50 desired</td></tr>
         <tr><td><b>log BB</b></td><td>Regression</td><td>Quantitative brain/blood ratio</td><td>&gt; +0.30 penetrant</td></tr>
         <tr><td><b>PAMPA log Pe</b></td><td>Regression</td><td>Passive transcellular permeability</td><td>&gt; &minus;6.0 high</td></tr>
-        <tr><td><b>Caco-2 log Papp</b></td><td>Regression</td><td>Intestinal/paracellular absorption</td><td>&gt; &minus;5.15 high</td></tr>
+        <tr><td><b>Caco-2 log Papp</b></td><td>Regression</td><td>Intestinal absorption</td><td>&gt; &minus;5.15 high</td></tr>
       </table>
       <div style="background:#EEF4FF;border-radius:8px;padding:.9rem 1.1rem;margin-top:1rem;border-left:3px solid #1A3A5C">
-        <b style="color:#1A3A5C;font-size:.85rem">Key innovation:</b>
-        <span style="color:#334155;font-size:.85rem"> Simultaneous multitask GNN prediction with 5-seed ensemble uncertainty quantification —
-        enabling scientists to assess not just a single endpoint, but the complete CNS transport liability profile
-        of any compound in a single forward pass from SMILES input.</span>
+        <b style="color:#1A3A5C;font-size:.84rem">Key innovation:</b>
+        <span style="color:#334155;font-size:.84rem"> Simultaneous multitask GNN prediction with 5-seed ensemble uncertainty quantification &mdash; the complete CNS transport liability profile of any compound in a single forward pass from SMILES input.</span>
       </div>
     </div>""", unsafe_allow_html=True)
 
-    # Science for Society
+    # ── 100 Years ─────────────────────────────────────────────────────────────
     st.markdown("""<div class="about-card">
-      <div style="font-size:1.05rem;font-weight:700;color:#0D2137;margin-bottom:.6rem">Science for Society &mdash; 100 Years of Selfless Service</div>
+      <div style="font-size:1.15rem;font-weight:700;color:#0D2137;margin-bottom:.8rem">100 Years of Selfless Service</div>
+      <p style="color:#334155;font-size:.90rem;line-height:1.75;margin-bottom:.9rem">
+        This offering celebrates <b>100 years of selfless service and unconditional love to our society</b>
+        by <b>Bhagawan Sri Sathya Sai Baba</b> (1926&ndash;2011).
+      </p>
       <div class="quote-block">&ldquo;Let the world achieve the glory of becoming a family &mdash; through Love.&rdquo;
         <div class="quote-attr">&mdash; Bhagawan Sri Sathya Sai Baba</div></div>
       <div class="quote-block">&ldquo;True knowledge is that which makes man work for the welfare of humanity.&rdquo;
         <div class="quote-attr">&mdash; Bhagawan Sri Sathya Sai Baba</div></div>
-      <p style="color:#334155;font-size:.88rem;line-height:1.75">
-        This tool is dedicated to the centenary of selfless service and unconditional love of
-        <b>Bhagawan Sri Sathya Sai Baba (1926&ndash;2011)</b>. It is offered freely to the global
-        scientific community in that spirit.</p>
     </div>""", unsafe_allow_html=True)
 
-    # Team + target publication
+    # ── Research Team ─────────────────────────────────────────────────────────
     st.markdown("""<div class="about-card">
-      <div style="font-size:1.05rem;font-weight:700;color:#0D2137;margin-bottom:1rem">Research Team</div>
+      <div style="font-size:1.15rem;font-weight:700;color:#0D2137;margin-bottom:1rem">Research Team</div>
       <div class="person-card">
         <span class="role-badge badge-pi">Principal Investigator</span>
-        <div><div class="person-name">Prof. Venketesh Sivaramakrishnan</div>
-        <div class="person-inst">Department of Biosciences &mdash; Sri Sathya Sai Institute of Higher Learning, Puttaparthi</div></div>
+        <div>
+          <div class="person-name">Prof. Venketesh Sivaramakrishnan</div>
+          <div class="person-inst">Sri Sathya Sai Institute of Higher Learning</div>
+        </div>
       </div>
       <div class="person-card">
         <span class="role-badge badge-dev">Developer</span>
-        <div><div class="person-name">Krishnasalini Gunanathan</div>
-        <div class="person-inst">Doctoral Research Scholar, Biosciences &mdash; Sri Sathya Sai Institute of Higher Learning</div></div>
-      </div>
-      <div style="background:#EEF4FF;border-radius:8px;padding:.8rem 1.1rem;margin-top:.8rem;border-left:3px solid #F0A500">
-        <b style="color:#1A3A5C;font-size:.85rem">Target Publication: </b>
-        <span style="color:#334155;font-size:.85rem">Nucleic Acids Research &mdash; Web Server Issue 2026</span>
+        <div>
+          <div class="person-name">Krishnasalini Gunanathan</div>
+          <div class="person-inst">Sri Sathya Sai Institute of Higher Learning</div>
+        </div>
       </div>
     </div>
-    <div class="disclaimer"><b>Educational/Research Use Only</b> &mdash; This tool is not intended as medical or clinical advice. Consult a qualified professional before making any decisions based on these predictions.</div>
+    <div class="disclaimer"><b>Educational Purpose Only</b> &mdash; This tool is not intended as medical advice. Consult a qualified healthcare professional before using any compound discussed here.</div>
+    <div style="font-size:.75rem;color:#94A3B8;text-align:center;margin-top:.8rem;padding-bottom:1rem">Data Sources &amp; Acknowledgements: PubChem &middot; RDKit &middot; PyTorch Geometric &middot; SSSIHL Biosciences</div>
     """, unsafe_allow_html=True)
