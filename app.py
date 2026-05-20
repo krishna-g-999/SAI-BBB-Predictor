@@ -241,7 +241,14 @@ with tab1:
 
     mode = st.radio("Input mode", ["SMILES (direct)", "Compound name (PubChem lookup)"],
                     horizontal=True, label_visibility="collapsed")
-    smiles_input = ""; compound_label = ""; cmpd_meta = {}
+
+    smiles_input = ""
+    compound_label = ""
+    cmpd_meta = {}
+    run = False
+    query_input = ""
+
+    c1, c2 = st.columns([5,1])
 
     if mode == "SMILES (direct)":
         st.markdown("""<div style="font-size:.78rem;color:#64748B;margin-bottom:.4rem">
@@ -250,30 +257,41 @@ with tab1:
         <span class="smiles-ex">CCOc1ccc2nc(S(N)(=O)=O)sc2c1</span> acetazolamide &nbsp;&nbsp;
         <span class="smiles-ex">CN1CCC[C@@H]1c2cccnc2</span> nicotine
         </div>""", unsafe_allow_html=True)
-        c1, c2 = st.columns([5,1])
-        smiles_input = c1.text_input("smiles", placeholder="Paste SMILES string here...", label_visibility="collapsed")
+        query_input = c1.text_input("smiles", placeholder="Paste SMILES string here...", label_visibility="collapsed")
         run = c2.button("Predict")
-        compound_label = smiles_input[:22]+"..." if len(smiles_input)>22 else smiles_input
+        if run:
+            smiles_input = query_input.strip()
+            compound_label = smiles_input[:22] + "..." if len(smiles_input) > 22 else smiles_input
+
     else:
         st.markdown("""<div style="font-size:.78rem;color:#64748B;margin-bottom:.4rem">
         Try: <b>donepezil</b> &nbsp; <b>memantine</b> &nbsp; <b>riluzole</b> &nbsp; <b>curcumin</b> &nbsp; <b>ibuprofen</b>
         </div>""", unsafe_allow_html=True)
-        c1, c2 = st.columns([5,1])
-        name_input = c1.text_input("name", placeholder="e.g. donepezil", label_visibility="collapsed")
+        query_input = c1.text_input("name", placeholder="e.g. donepezil", label_visibility="collapsed")
         run = c2.button("Predict")
-        if run and name_input.strip():
+
+        if run:
+            query_input = query_input.strip()
+            if not query_input:
+                st.warning("Enter a compound name.")
+                st.stop()
+
             with st.spinner("Fetching from PubChem..."):
-                cmpd_meta = pubchem_lookup(name_input.strip())
-            if cmpd_meta:
-                smiles_input = cmpd_meta["smiles"]; compound_label = name_input.title()
+                cmpd_meta = pubchem_lookup(query_input)
+
+            if cmpd_meta and cmpd_meta.get("smiles", "").strip():
+                smiles_input = cmpd_meta["smiles"].strip()
+                compound_label = query_input.title()
             else:
-                st.error("**{}** not found on PubChem. Switch to SMILES mode and paste the structure.".format(name_input))
+                st.error("**{}** not found on PubChem. Switch to SMILES mode and paste the structure.".format(query_input))
                 st.markdown('<div class="disclaimer">Get SMILES from <a href="https://pubchem.ncbi.nlm.nih.gov" target="_blank">PubChem</a> or <a href="https://www.chemspider.com" target="_blank">ChemSpider</a>.</div>', unsafe_allow_html=True)
                 st.stop()
-        elif run: st.warning("Enter a compound name."); st.stop()
-        else: run = False
 
-    if run and smiles_input.strip():
+    if run:
+        if not smiles_input.strip():
+            st.warning("Please enter a SMILES string or compound name.")
+            st.stop()
+
         if cmpd_meta:
             st.markdown("""
             <div style="background:linear-gradient(135deg,#0D1F35,#1A3A5C);border-radius:10px;
@@ -381,8 +399,7 @@ with tab1:
             file_name="saibbb_{}.csv".format(compound_label.lower().replace(" ","_").replace("/","")))
         st.markdown('<div class="disclaimer"><b>Educational/Research Use Only</b> — Predictions are computational estimates. Not for clinical decision making.</div>', unsafe_allow_html=True)
 
-    elif run:
-        st.warning("Please enter a SMILES string or compound name.")
+
 
 with tab2:
     # ── Header: logo left, title right  (mirrors BrainSafe AI template) ──────
